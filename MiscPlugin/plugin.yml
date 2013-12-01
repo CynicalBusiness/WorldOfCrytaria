@@ -1,6 +1,6 @@
 name: Game_Misc
 version: 01.00.01
-main: net.mayateck.GameMisc
+main: net.mayateck.GameMisc.GameMisc
 
 <nowiki>website: www.mayateck.net</nowiki>
 description: GameData_Misc
