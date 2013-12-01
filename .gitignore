@@ -1,4 +1,8 @@
 *.class
+.metadata
+.classpath
+.project
+.settings
 
 # Package Files #
 *.jar
