@@ -1,0 +1,10 @@
+name: Game_Misc
+version: 01.00.01
+main: net.mayateck.GameMisc
+
+<nowiki>website: www.mayateck.net</nowiki>
+description: GameData_Misc
+author: Wehttam664
+preix: Misc
+
+# No Command/Permisison registrys! #
