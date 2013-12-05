@@ -3,11 +3,13 @@ package net.mayateck.GameMisc;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -37,7 +39,13 @@ public class DataEventHandler implements Listener{
 	}
 	
 	@EventHandler
-	public void onPlayerDeath(PlayerRespawnEvent e){
+	public void onPlayerDeath(PlayerDeathEvent e){
+		Player p = e.getEntity();
+		e.setDeathMessage(ChatColor.DARK_RED+p.getName()+" was slain.");
+	}
+	
+	@EventHandler
+	public void onPlayerRespawn(PlayerRespawnEvent e){
 		plugin.getLogger().info("Player died. Checking bed data...");
 		Player p = e.getPlayer();
 		if (e.isBedSpawn()==false){
