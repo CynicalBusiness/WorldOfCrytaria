@@ -18,7 +18,9 @@ public class GameMisc extends JavaPlugin{
 	@Override
 	public void onEnable(){
 		DataEventHandler eh = new DataEventHandler(this);
+		ChatDataHandler cd = new ChatDataHandler(this);
 		getServer().getPluginManager().registerEvents(eh, this);
+		getServer().getPluginManager().registerEvents(cd, this);
 		saveDefaultPList();
 		saveDefaultConfig();
 		getLogger().info("Enabled GameMisc data.");
