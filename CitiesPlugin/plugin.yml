@@ -1,0 +1,14 @@
+name: Game_Cities
+version: 01.00.01
+main: net.mayateck.GameCities.GameCities
+
+<nowiki>website: woc.mayateck.net</nowiki>
+description: GameData_Cities
+author: Wehttam664
+preix: Cities
+
+commands:
+  city:
+    description: 'Cities Core Command'
+    aliases: ct
+    usage: 'Syntax Issue. Try /ct help'
