@@ -1,8 +1,8 @@
 name: Game_Misc
-version: 01.00.01
+version: 01.01.03
 main: net.mayateck.GameMisc.GameMisc
 
-<nowiki>website: www.mayateck.net</nowiki>
+<nowiki>website: woc.mayateck.net</nowiki>
 description: GameData_Misc
 author: Wehttam664
 preix: Misc
