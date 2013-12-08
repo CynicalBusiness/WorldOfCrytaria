@@ -1,0 +1,9 @@
+name: Game_Workshop
+version: 1.00.01
+main: net.mayateck.GameWorkshop.GameWorkshop
+
+<nowiki>website: http://woc.mayateck.net/</nowiki>
+description: GameData_Misc
+author: Wehttam664
+prefix: Workshop
+depend: Game_Cities
