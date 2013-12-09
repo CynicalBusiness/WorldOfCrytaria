@@ -3,12 +3,12 @@ version: 01.00.01
 main: net.mayateck.GameCities.GameCities
 
 <nowiki>website: woc.mayateck.net</nowiki>
-description: GameData_Cities
+description: GameData_Organizations
 author: Wehttam664
-preix: Cities
+preix: Organizations
 
 commands:
   city:
-    description: 'Cities Core Command'
-    aliases: ct
-    usage: 'Syntax Issue. Try /ct help'
+    description: 'Organizations Core Command'
+    aliases: org
+    usage: 'Syntax Issue. Try /org help'
