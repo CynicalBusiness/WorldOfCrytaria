@@ -1,4 +1,5 @@
 config:
-
+  ORGNAME_MIN_LENGTH: 2
+  ORGNAME_MAX_LENGTH: 20
 data:
-  cities:
+  organizations:
