@@ -14,6 +14,8 @@ public class Organization {
 	
 	double funds;
 	
+	public boolean isReal;
+	
 	List<String> relations;
 	List<String> players;
 	
@@ -36,6 +38,7 @@ public class Organization {
 	public Organization(FileConfiguration cfg, String name){
 		if (name!=null){
 			this.name=name;
+			isReal=true;
 			pullDataFromDisk();
 		} else {
 			this.name=name;
@@ -45,6 +48,7 @@ public class Organization {
 			relations=Arrays.asList();
 			players=Arrays.asList();
 			groups=new HashMap<String, ConfigurationSection>();
+			isReal=false;
 		}
 	}
 	
@@ -167,6 +171,36 @@ public class Organization {
 			return true;
 		} else {
 			return false;
+		}
+	}
+	
+	public boolean groupHasPermission(String group, String permission){
+		if (groupExists(group)){
+			if (groups.get(group).getStringList("perms").contains(permission)){
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
+	public boolean groupHasPermission(String group, List<String> permission, boolean isAll){
+		boolean hasOne = false;
+		boolean hasAll = true;
+		for (String val : permission){
+			boolean hasPerm = groupHasPermission(group, val);
+			if (hasPerm==true){
+				hasOne=true;
+			} else {
+				hasAll=false;
+			}
+		}
+		if (isAll){
+			return hasAll;
+		} else {
+			return hasOne;
 		}
 	}
 
