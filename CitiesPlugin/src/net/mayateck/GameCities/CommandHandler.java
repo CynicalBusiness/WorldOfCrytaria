@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import net.mayateck.GameCities.OrgHandler.Organization;
+import net.mayateck.GameCities.OrgHandler.ProtectionHandler;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -19,11 +20,13 @@ public class CommandHandler implements CommandExecutor{
 	}
 	
 	Plugin plugin = null;
+	ProtectionHandler ph = null;
 	List<String> helpList = Arrays.asList(
 			"&e/org create [name] &r- &7Founds a new organization.");
 	
-	public CommandHandler(Plugin p){
+	public CommandHandler(Plugin p, ProtectionHandler ph){
 		plugin=p;
+		this.ph=ph;
 	}
 
 	@Override
@@ -82,10 +85,10 @@ public class CommandHandler implements CommandExecutor{
 										if (!plugin.getConfig().contains("data.organizations."+orgName)){
 											plugin.getConfig().set("organizations."+orgName+".owner", p.getName());
 											plugin.getConfig().set("organizations."+orgName+".groups.admin.players", Arrays.asList(p.getName()));
-											plugin.getConfig().set("organizations."+orgName+".groups.admin.permissions", Arrays.asList("edit.*", "ranks.*", "econ.*", "research.*"));
+											plugin.getConfig().set("organizations."+orgName+".groups.admin.permissions", Arrays.asList("edit.*", "ranks.*", "econ.*", "research.*", "fortify.*"));
 											plugin.getConfig().set("organizations."+orgName+".groups.moderator.players", Arrays.asList());
-											plugin.getConfig().set("organizations."+orgName+".groups.moderator.permissions", Arrays.asList("edit.kitmod", "ranks.kitmod", "econ.kitmod", "research.*"));
-											plugin.getConfig().set("organizations."+orgName+".groups.default.permissions", Arrays.asList("econ.kitcitizen", "research.kitcitizen"));
+											plugin.getConfig().set("organizations."+orgName+".groups.moderator.permissions", Arrays.asList("edit.kitmod", "ranks.kitmod", "econ.kitmod", "research.*", "fortify.kitmod"));
+											plugin.getConfig().set("organizations."+orgName+".groups.default.permissions", Arrays.asList("econ.kitcitizen", "research.kitcitizen", "fortify.kitcitizen"));
 											plugin.getConfig().set("organizations."+orgName+".tag", orgName);
 											plugin.getConfig().set("organizations."+orgName+".desc", "");
 											plugin.getConfig().set("organizations."+orgName+".funds", 0.0);
@@ -120,6 +123,7 @@ public class CommandHandler implements CommandExecutor{
 										org.setTag(args[2]);
 										org.writeDataToDisk();
 										plugin.saveConfig();
+										return CommandOutput.SUCCESS;
 									} else {
 										return CommandOutput.BAD_ARG;
 									}
@@ -131,6 +135,41 @@ public class CommandHandler implements CommandExecutor{
 							}
 						} else {
 							return CommandOutput.BAD_ARG;
+						}
+					} else {
+						return CommandOutput.BAD_ARG_COUNT;
+					}
+				} else if (args[0].equalsIgnoreCase("fortify")) {
+					Organization org = Organization.getOrganizationByPlayer(plugin.getConfig(), p.getName());
+					List<String> perms = Arrays.asList("fortify.*", "fortify.kitcitizen", "fortify.kitmod", "fortify.add");
+					if (args.length<3){
+						String group = "";
+						if (args.length==2){
+							if (org.groupExists(args[1])){
+								group=args[1];
+							} else {
+								return CommandOutput.BAD_ARG;
+							}
+						} else {
+							group = org.getPlayerGroup(p.getName());
+						}
+						if (org.groupHasPermission(group, perms, false)){
+							if (ph.protPlayers.containsKey(p)){
+								if (ph.protPlayers.get(p).equalsIgnoreCase(group)){
+									ph.protPlayers.remove(p);
+									p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You are no longer in fortify mode."));
+								} else {
+									ph.protPlayers.remove(p);
+									ph.protPlayers.put(p, group.toLowerCase());
+									p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Changed foritification group to '"+group+"'."));
+								}
+							} else {
+								ph.protPlayers.put(p, group.toLowerCase());
+								p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Now fortifying for group '"+group+"'."));
+							}
+							return CommandOutput.SUCCESS;
+						} else {
+							return CommandOutput.NO_ORG_PERMISSION;
 						}
 					} else {
 						return CommandOutput.BAD_ARG_COUNT;
