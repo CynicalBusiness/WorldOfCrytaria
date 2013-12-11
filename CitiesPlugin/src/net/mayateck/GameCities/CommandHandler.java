@@ -3,6 +3,8 @@ package net.mayateck.GameCities;
 import java.util.Arrays;
 import java.util.List;
 
+import net.mayateck.GameCities.OrgHandler.Organization;
+
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -13,7 +15,7 @@ import org.bukkit.plugin.Plugin;
 public class CommandHandler implements CommandExecutor{
 	public enum CommandOutput{
 		SUCCESS, NULL, BAD_SENDER, BAD_ARG_COUNT, BAD_ARG,
-		NO_PERMISSION, ALREADY_EXISTS
+		NO_PERMISSION, ALREADY_EXISTS, MUST_LEAVE, NO_ORG_PERMISSION
 	}
 	
 	Plugin plugin = null;
@@ -42,6 +44,10 @@ public class CommandHandler implements CommandExecutor{
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Sorry, you don't have the ability to do this."));
 		case ALREADY_EXISTS:
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Sorry, something you tried to make already exists."));
+		case MUST_LEAVE:
+			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You can't do that while you're in an organization."));
+		case NO_ORG_PERMISSION:
+			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Sorry, your organization doesn't permit you to do that."));
 		}
 		return false;
 	}
@@ -69,25 +75,30 @@ public class CommandHandler implements CommandExecutor{
 					if (isPlayer){
 						if (args.length==2){
 							if (s.hasPermission("organizations.create")){
-								String orgName = args[1].toLowerCase();
-								if (orgName.length()>plugin.getConfig().getInt("config.ORGNAME_MIN_LENGTH") && orgName.length()<plugin.getConfig().getInt("config.ORGNAME_MAX_LENGTH") && orgName.matches("^[A-Za-z_]{1,}$")){
-									if (!plugin.getConfig().contains("data.organizations."+orgName)){
-										plugin.getConfig().set("organizations."+orgName+".owner", p.getName());
-										plugin.getConfig().set("organizations."+orgName+".groups.admin.players", Arrays.asList(p.getName()));
-										plugin.getConfig().set("organizations."+orgName+".groups.admin.permissions", Arrays.asList("edit.*", "ranks.*", "econ.*", "research.*"));
-										plugin.getConfig().set("organizations."+orgName+".groups.moderator.players", Arrays.asList());
-										plugin.getConfig().set("organizations."+orgName+".groups.moderator.permissions", Arrays.asList("edit.kitmod", "ranks.kitmod", "econ.kitmod", "research.*"));
-										plugin.getConfig().set("organizations."+orgName+".groups.default.permissions", Arrays.asList("econ.kitcitizen", "research.kitcitizen"));
-										plugin.getConfig().set("organizations."+orgName+".tag", orgName);
-										plugin.getConfig().set("organizations."+orgName+".desc", "");
-										plugin.getConfig().set("organizations."+orgName+".funds", 0.0);
-										plugin.getConfig().set("organizations."+orgName+".relations", "");
-										return CommandOutput.SUCCESS;
+								Organization org = Organization.getOrganizationByPlayer(plugin.getConfig(), p.getName());
+								if (org.isReal==false){
+									String orgName = args[1].toLowerCase();
+									if (orgName.length()>plugin.getConfig().getInt("config.ORGNAME_MIN_LENGTH") && orgName.length()<plugin.getConfig().getInt("config.ORGNAME_MAX_LENGTH") && orgName.matches("^[A-Za-z_]{1,}$")){
+										if (!plugin.getConfig().contains("data.organizations."+orgName)){
+											plugin.getConfig().set("organizations."+orgName+".owner", p.getName());
+											plugin.getConfig().set("organizations."+orgName+".groups.admin.players", Arrays.asList(p.getName()));
+											plugin.getConfig().set("organizations."+orgName+".groups.admin.permissions", Arrays.asList("edit.*", "ranks.*", "econ.*", "research.*"));
+											plugin.getConfig().set("organizations."+orgName+".groups.moderator.players", Arrays.asList());
+											plugin.getConfig().set("organizations."+orgName+".groups.moderator.permissions", Arrays.asList("edit.kitmod", "ranks.kitmod", "econ.kitmod", "research.*"));
+											plugin.getConfig().set("organizations."+orgName+".groups.default.permissions", Arrays.asList("econ.kitcitizen", "research.kitcitizen"));
+											plugin.getConfig().set("organizations."+orgName+".tag", orgName);
+											plugin.getConfig().set("organizations."+orgName+".desc", "");
+											plugin.getConfig().set("organizations."+orgName+".funds", 0.0);
+											plugin.getConfig().set("organizations."+orgName+".relations", "");
+											return CommandOutput.SUCCESS;
+										} else {
+											return CommandOutput.ALREADY_EXISTS;
+										}
 									} else {
-										return CommandOutput.ALREADY_EXISTS;
+										return CommandOutput.BAD_ARG;
 									}
 								} else {
-									return CommandOutput.BAD_ARG;
+									return CommandOutput.MUST_LEAVE;
 								}
 							} else {
 								return CommandOutput.NO_PERMISSION;
@@ -100,7 +111,27 @@ public class CommandHandler implements CommandExecutor{
 					}
 				} else if (args[0].equalsIgnoreCase("set")){
 					if (args.length>1){
-						
+						Organization org = Organization.getOrganizationByPlayer(plugin.getConfig(), p.getName());
+						if (args[1].equalsIgnoreCase("tag")){
+							if (args.length==3){
+								List<String> perms = Arrays.asList("edit.tag", "edit.*", "edit.kitmod");
+								if (org.groupHasPermission(org.getPlayerGroup(p.getName()), perms, false)){
+									if (args[2].length()>plugin.getConfig().getInt("config.ORGNAME_MIN_LENGTH") && args[2].length()<plugin.getConfig().getInt("config.ORGNAME_MAX_LENGTH") && args[2].matches("^[A-Za-z_]{1,}$")){
+										org.setTag(args[2]);
+										org.writeDataToDisk();
+										plugin.saveConfig();
+									} else {
+										return CommandOutput.BAD_ARG;
+									}
+								} else {
+									return CommandOutput.NO_ORG_PERMISSION;
+								}
+							} else {
+								return CommandOutput.BAD_ARG_COUNT;
+							}
+						} else {
+							return CommandOutput.BAD_ARG;
+						}
 					} else {
 						return CommandOutput.BAD_ARG_COUNT;
 					}
