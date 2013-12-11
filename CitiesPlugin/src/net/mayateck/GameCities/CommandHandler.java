@@ -70,14 +70,17 @@ public class CommandHandler implements CommandExecutor{
 						if (args.length==2){
 							if (s.hasPermission("organizations.create")){
 								String orgName = args[1].toLowerCase();
-								if (orgName.length()>plugin.getConfig().getInt("config.ORGNAME_MIN_LENGTH") && orgName.length()<plugin.getConfig().getInt("config.ORGNAME_MAX_LENGTH")){
+								if (orgName.length()>plugin.getConfig().getInt("config.ORGNAME_MIN_LENGTH") && orgName.length()<plugin.getConfig().getInt("config.ORGNAME_MAX_LENGTH") && orgName.matches("^[A-Za-z_]{1,}$")){
 									if (!plugin.getConfig().contains("data.organizations."+orgName)){
 										plugin.getConfig().set("organizations."+orgName+".owner", p.getName());
-										plugin.getConfig().set("organizations."+orgName+".groups.admin", Arrays.asList(p.getName()));
-										plugin.getConfig().set("organizations."+orgName+".groups.moderator", Arrays.asList());
-										plugin.getConfig().set("organizations."+orgName+".groups.default", Arrays.asList());
+										plugin.getConfig().set("organizations."+orgName+".groups.admin.players", Arrays.asList(p.getName()));
+										plugin.getConfig().set("organizations."+orgName+".groups.admin.permissions", Arrays.asList("edit.*", "ranks.*", "econ.*", "research.*"));
+										plugin.getConfig().set("organizations."+orgName+".groups.moderator.players", Arrays.asList());
+										plugin.getConfig().set("organizations."+orgName+".groups.moderator.permissions", Arrays.asList("edit.kitmod", "ranks.kitmod", "econ.kitmod", "research.*"));
+										plugin.getConfig().set("organizations."+orgName+".groups.default.permissions", Arrays.asList("econ.kitcitizen", "research.kitcitizen"));
 										plugin.getConfig().set("organizations."+orgName+".tag", orgName);
 										plugin.getConfig().set("organizations."+orgName+".desc", "");
+										plugin.getConfig().set("organizations."+orgName+".funds", 0.0);
 										plugin.getConfig().set("organizations."+orgName+".relations", "");
 										return CommandOutput.SUCCESS;
 									} else {
@@ -94,6 +97,12 @@ public class CommandHandler implements CommandExecutor{
 						}
 					} else {
 						return CommandOutput.BAD_SENDER;
+					}
+				} else if (args[0].equalsIgnoreCase("set")){
+					if (args.length>1){
+						
+					} else {
+						return CommandOutput.BAD_ARG_COUNT;
 					}
 				} else if (args[0].equalsIgnoreCase("delete")) {
 					
