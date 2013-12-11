@@ -1,6 +1,7 @@
 package net.mayateck.GameCities;
 
 import net.mayateck.GameCities.OrgHandler.DataFetch;
+import net.mayateck.GameCities.OrgHandler.ProtectionHandler;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -10,11 +11,14 @@ public class GameCities extends JavaPlugin {
 	public static String version = "";
 	
 	public DataFetch fetcher = null;
+	public ProtectionHandler protEventHandler = null;
 	
 	@Override
 	public void onEnable(){
 		fetcher = new DataFetch(this);
-		CommandHandler cmdh = new CommandHandler(this);
+		protEventHandler = new ProtectionHandler(this);
+		CommandHandler cmdh = new CommandHandler(this, protEventHandler);
+		getServer().getPluginManager().registerEvents(protEventHandler, this);
 		version = this.getDescription().getVersion();
 		saveDefaultConfig();
 		getCommand("city").setExecutor(cmdh);
@@ -27,5 +31,9 @@ public class GameCities extends JavaPlugin {
 		
 		saveConfig();
 		getLogger().info("Disabled Cities");
+	}
+	
+	public ProtectionHandler getProtHandler(){
+		return protEventHandler;
 	}
 }
