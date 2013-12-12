@@ -16,7 +16,8 @@ import org.bukkit.plugin.Plugin;
 public class CommandHandler implements CommandExecutor{
 	public enum CommandOutput{
 		SUCCESS, NULL, BAD_SENDER, BAD_ARG_COUNT, BAD_ARG,
-		NO_PERMISSION, ALREADY_EXISTS, MUST_LEAVE, NO_ORG_PERMISSION
+		NO_PERMISSION, ALREADY_EXISTS, MUST_LEAVE, NO_ORG_PERMISSION,
+		BAD_ORG, NOT_IN_ORG
 	}
 	
 	Plugin plugin = null;
@@ -51,6 +52,10 @@ public class CommandHandler implements CommandExecutor{
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You can't do that while you're in an organization."));
 		case NO_ORG_PERMISSION:
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Sorry, your organization doesn't permit you to do that."));
+		case BAD_ORG:
+			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"That organization doesn't exist."));
+		case NOT_IN_ORG:
+			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You're not in an organization!"));
 		}
 		return false;
 	}
@@ -142,37 +147,41 @@ public class CommandHandler implements CommandExecutor{
 				} else if (args[0].equalsIgnoreCase("fortify")) {
 					Organization org = Organization.getOrganizationByPlayer(plugin.getConfig(), p.getName());
 					List<String> perms = Arrays.asList("fortify.*", "fortify.kitcitizen", "fortify.kitmod", "fortify.add");
-					if (args.length<3){
-						String group = "";
-						if (args.length==2){
-							if (org.groupExists(args[1])){
-								group=args[1];
-							} else {
-								return CommandOutput.BAD_ARG;
-							}
-						} else {
-							group = org.getPlayerGroup(p.getName());
-						}
-						if (org.groupHasPermission(group, perms, false)){
-							if (ph.protPlayers.containsKey(p)){
-								if (ph.protPlayers.get(p).equalsIgnoreCase(group)){
-									ph.protPlayers.remove(p);
-									p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You are no longer in fortify mode."));
+					if (org.isReal){
+						if (args.length<3){
+							String group = "";
+							if (args.length==2){
+								if (org.groupExists(args[1])){
+									group=args[1];
 								} else {
-									ph.protPlayers.remove(p);
-									ph.protPlayers.put(p, group.toLowerCase());
-									p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Changed foritification group to '"+group+"'."));
+									return CommandOutput.BAD_ARG;
 								}
 							} else {
-								ph.protPlayers.put(p, group.toLowerCase());
-								p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Now fortifying for group '"+group+"'."));
+								group = org.getPlayerGroup(p.getName());
 							}
-							return CommandOutput.SUCCESS;
+							if (org.groupHasPermission(group, perms, false)){
+								if (ph.protPlayers.containsKey(p)){
+									if (ph.protPlayers.get(p).equalsIgnoreCase(group)){
+										ph.protPlayers.remove(p);
+										p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You are no longer in fortify mode."));
+									} else {
+										ph.protPlayers.remove(p);
+										ph.protPlayers.put(p.getName(), group.toLowerCase());
+										p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Changed foritification group to '"+group+"'."));
+									}
+								} else {
+									ph.protPlayers.put(p.getName(), group.toLowerCase());
+									p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Now fortifying for group '"+group+"'."));
+								}
+								return CommandOutput.SUCCESS;
+							} else {
+								return CommandOutput.NO_ORG_PERMISSION;
+							}
 						} else {
-							return CommandOutput.NO_ORG_PERMISSION;
+							return CommandOutput.BAD_ARG_COUNT;
 						}
 					} else {
-						return CommandOutput.BAD_ARG_COUNT;
+						return CommandOutput.NOT_IN_ORG;
 					}
 				} else if (args[0].equalsIgnoreCase("delete")) {
 					
