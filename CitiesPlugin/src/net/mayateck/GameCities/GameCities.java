@@ -19,18 +19,20 @@ public class GameCities extends JavaPlugin {
 		protEventHandler = new ProtectionHandler(this);
 		CommandHandler cmdh = new CommandHandler(this, protEventHandler);
 		getServer().getPluginManager().registerEvents(protEventHandler, this);
+		getCommand("organization").setExecutor(cmdh);
+		
 		version = this.getDescription().getVersion();
 		saveDefaultConfig();
-		getCommand("city").setExecutor(cmdh);
+		protEventHandler.loadBlockDataFromDisk();
 		
-		getLogger().info("Enabled Cities.");
+		getLogger().info("Enabled WoC.Organizations.");
 	}
 	
 	@Override
 	public void onDisable(){
-		
+		protEventHandler.saveBlockDataToDisk();
 		saveConfig();
-		getLogger().info("Disabled Cities");
+		getLogger().info("Disabled WoC.Organizations");
 	}
 	
 	public ProtectionHandler getProtHandler(){
