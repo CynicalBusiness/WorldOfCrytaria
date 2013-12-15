@@ -237,6 +237,7 @@ public class Organization {
 		List<String> organizations = Arrays.asList();
 		if (relation==Relation.NEUTRAL){
 			organizations.add("You are automatically neutral with non-related nations.");
+			organizations.add(".nchk"); // Helps the CommandHandler check for this outcome.
 		} else {
 			for (String key : relations){
 				if (key.substring(key.indexOf(":")+1).equalsIgnoreCase(relations.toString())){
@@ -278,16 +279,19 @@ public class Organization {
 	
 	public void pullDataFromDisk(String name){
 		this.name=name;
-		
-		desc = cfg.getString("organizations."+name+".desc");
-		tag = cfg.getString("organizations."+name+".tag");
-		funds = cfg.getDouble("organizations."+name+".funds");
-		relations = cfg.getStringList("organizations."+name+".relations");
-		players = cfg.getStringList("organizations."+name+".players");
-		
-		groups.clear();
-		for (String key : cfg.getConfigurationSection("organizations."+name+".groups").getKeys(false)){
-			groups.put(key, cfg.getConfigurationSection("organizations."+name+".groups."+key));
+		if (cfg.contains("organizations."+name)){
+			desc = cfg.getString("organizations."+name+".desc");
+			tag = cfg.getString("organizations."+name+".tag");
+			funds = cfg.getDouble("organizations."+name+".funds");
+			relations = cfg.getStringList("organizations."+name+".relations");
+			players = cfg.getStringList("organizations."+name+".players");
+			
+			groups.clear();
+			for (String key : cfg.getConfigurationSection("organizations."+name+".groups").getKeys(false)){
+				groups.put(key, cfg.getConfigurationSection("organizations."+name+".groups."+key));
+			}
+		} else {
+			isReal=false;
 		}
 	} public void pullDataFromDisk(){pullDataFromDisk(name);}
 }
