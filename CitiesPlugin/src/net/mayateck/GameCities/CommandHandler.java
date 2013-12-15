@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.mayateck.GameCities.OrgHandler.Organization;
 import net.mayateck.GameCities.OrgHandler.ProtectionHandler;
+import net.mayateck.GameCities.OrgHandler.Relation;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -17,7 +18,7 @@ public class CommandHandler implements CommandExecutor{
 	public enum CommandOutput{
 		SUCCESS, NULL, BAD_SENDER, BAD_ARG_COUNT, BAD_ARG,
 		NO_PERMISSION, ALREADY_EXISTS, MUST_LEAVE, NO_ORG_PERMISSION,
-		BAD_ORG, NOT_IN_ORG
+		BAD_ORG, NOT_IN_ORG, TODO
 	}
 	
 	Plugin plugin = null;
@@ -35,6 +36,7 @@ public class CommandHandler implements CommandExecutor{
 		switch (parseCommand(s, cmd, label, args)){
 		case NULL:
 			plugin.getLogger().info("onCommand fired from "+s.getName()+" with null return.");
+			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Woah, a &cprogramming error&r occurred. &oPlease let a dev know!&r"));
 		case SUCCESS:
 			plugin.getLogger().info("onCommand fired from "+s.getName()+" with success.");
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Command succeeded!"));
@@ -56,6 +58,8 @@ public class CommandHandler implements CommandExecutor{
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"That organization doesn't exist."));
 		case NOT_IN_ORG:
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You're not in an organization!"));
+		case TODO:
+			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"&9TODO&r."));
 		}
 		return false;
 	}
@@ -138,11 +142,90 @@ public class CommandHandler implements CommandExecutor{
 							} else {
 								return CommandOutput.BAD_ARG_COUNT;
 							}
+						} else if (args[1].equalsIgnoreCase("desc")){
+							if (args.length > 2){
+								List<String> perms = Arrays.asList("edit.desc", "edit.*", "edit.kitmod");
+								if (org.groupHasPermission(org.getPlayerGroup(p.getName()), perms, false)){
+									String desc = "";
+									int i = 1;
+									for (String arg : args){
+										if (i>2){
+											desc+=arg;
+										}
+										i++;
+									}
+									desc.replaceAll("'", "''");
+									org.setDesc(desc);
+									org.writeDataToDisk();
+									plugin.saveConfig();
+									return CommandOutput.SUCCESS;
+								} else {
+									return CommandOutput.NO_ORG_PERMISSION;
+								}
+							} else {
+								return CommandOutput.BAD_ARG_COUNT;
+							}
 						} else {
 							return CommandOutput.BAD_ARG;
 						}
 					} else {
 						return CommandOutput.BAD_ARG_COUNT;
+					}
+				} else if (args[0].equalsIgnoreCase("relations")){
+					Organization org = Organization.getOrganizationByPlayer(plugin.getConfig(), p.getName());
+					if (org.isReal){
+						if (args[1].equalsIgnoreCase("view")){
+							if (args.length==4){
+								if (args[2].equalsIgnoreCase("org") || args[2].equalsIgnoreCase("organization")){
+									Organization reqorg = new Organization(plugin.getConfig(), args[3].toLowerCase());
+									if (reqorg.isReal==true){
+										Relation rel = org.getRelationsWith(args[3].toLowerCase());
+										s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Your organiation is "+rel.toString()+" toward "+args[3]+"."));
+										return CommandOutput.SUCCESS;
+									} else {
+										return CommandOutput.BAD_ORG;
+									}
+								} else if (args[2].equalsIgnoreCase("relation")){
+									Relation rel = Relation.valueOf(args[3].toUpperCase());
+									if (rel!=null || rel!=Relation.NULL){
+										List<String> orgs = org.getOrganizationsWithRelation(rel);
+										if (!orgs.contains(".nchk")){
+											s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Your organization's "+args[3].toUpperCase()+ " relations are:"));
+											for (String str : orgs){
+												Organization strorg = new Organization(plugin.getConfig(), str);
+												String echoString = " &7- &f";
+												if (strorg.isReal==true){
+													if (strorg.getName().equalsIgnoreCase("")){
+														echoString += str;
+													} else {
+														echoString += "&7"+strorg.getName()+" &r&o("+str+")&r";
+													}
+												} else {
+													echoString += "&n"+str+" &r&o(Disbanded)&r";
+												}
+												s.sendMessage(ChatColor.translateAlternateColorCodes('&', echoString));
+											}
+										} else {
+											s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+orgs.get(0)));
+										}
+										return CommandOutput.SUCCESS;
+									} else {
+										return CommandOutput.BAD_ARG;
+									}
+								} else {
+									return CommandOutput.BAD_ARG;
+								}
+							} else {
+								return CommandOutput.BAD_ARG_COUNT;
+							}
+						} else if (args[0].equalsIgnoreCase("set")){ // TODO Setup relation setting.
+							
+							return CommandOutput.TODO;
+						} else {
+							return CommandOutput.BAD_ARG;
+						}
+					} else {
+						return CommandOutput.NOT_IN_ORG;
 					}
 				} else if (args[0].equalsIgnoreCase("fortify")) {
 					Organization org = Organization.getOrganizationByPlayer(plugin.getConfig(), p.getName());
