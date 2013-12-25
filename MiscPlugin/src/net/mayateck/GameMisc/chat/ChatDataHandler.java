@@ -1,4 +1,4 @@
-package net.mayateck.GameMisc;
+package net.mayateck.GameMisc.chat;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
