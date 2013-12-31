@@ -6,10 +6,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.Plugin;
 
-@SuppressWarnings("deprecation")
 public class ChatDataHandler implements Listener{
 	Plugin plugin;
 	
@@ -22,7 +21,7 @@ public class ChatDataHandler implements Listener{
 	}
 	
 	@EventHandler(priority=EventPriority.LOWEST)
-	public void onPlayerChatted(PlayerChatEvent e){
+	public void onPlayerChatted(AsyncPlayerChatEvent e){
 		Player plyr = e.getPlayer();
 		plugin.getLogger().info(plyr.getName()+": "+e.getMessage());
 		Player[] allPlayers = plugin.getServer().getOnlinePlayers();
