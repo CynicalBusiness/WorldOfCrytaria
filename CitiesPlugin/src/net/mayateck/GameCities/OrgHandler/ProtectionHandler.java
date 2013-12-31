@@ -116,7 +116,6 @@ public class ProtectionHandler implements Listener {
 		} catch (FileNotFoundException e1) {
 			plugin.getLogger().log(Level.WARNING, "The blockdata file was missing. Attempting to create...");
 			new File(plugin.getDataFolder()+File.separator+"blocks.bin");
-			saveBlockDataToDisk();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
