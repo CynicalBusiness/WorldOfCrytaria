@@ -32,7 +32,7 @@ public class Organization {
 				return new Organization(cfg, key);
 			}
 		}
-		return null;
+		return new Organization(cfg, null);
 	}
 	
 	public Organization(FileConfiguration cfg, String name){
@@ -42,6 +42,7 @@ public class Organization {
 			pullDataFromDisk();
 		} else {
 			this.name=name;
+			this.cfg=cfg;
 			desc="";
 			tag="";
 			funds=0.0;
@@ -58,6 +59,10 @@ public class Organization {
 
 	public String getName() {
 		return name;
+	}
+	
+	public void setConfig(FileConfiguration cfg){
+		this.cfg=cfg;
 	}
 
 	public String getDesc() {
@@ -111,7 +116,10 @@ public class Organization {
 	
 	public String getPlayerGroup(String player){
 		String playerGroup = "";
+		pullDataFromDisk();
+		System.out.println("Found " + groups.size() + " groups.");
 		for (String key : groups.keySet()){
+			System.out.println("Checking group "+key);
 			List<String> players = groups.get(key).getStringList("players");
 			if (players.contains(player)){
 				playerGroup = key;
@@ -289,6 +297,7 @@ public class Organization {
 			groups.clear();
 			for (String key : cfg.getConfigurationSection("organizations."+name+".groups").getKeys(false)){
 				groups.put(key, cfg.getConfigurationSection("organizations."+name+".groups."+key));
+				System.out.println("Put organizations."+name+".groups."+key);
 			}
 		} else {
 			isReal=false;
