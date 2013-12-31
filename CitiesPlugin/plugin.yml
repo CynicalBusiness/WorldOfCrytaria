@@ -1,4 +1,4 @@
-name: Game_Cities
+name: Game_Organizations
 version: 01.00.01
 main: net.mayateck.GameCities.GameCities
 
@@ -8,7 +8,7 @@ author: Wehttam664
 preix: Organizations
 
 commands:
-  city:
+  organization:
     description: 'Organizations Core Command'
     aliases: org
     usage: 'Syntax Issue. Try /org help'
