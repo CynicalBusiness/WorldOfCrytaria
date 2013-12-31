@@ -74,8 +74,8 @@ public class DataEventHandler implements Listener{
 			loc.setX(randX);
 			loc.setZ(randZ);
 		}
-		if (loc.getBlock().getType().equals(Material.WATER)){
-			plugin.getLogger().info("Got bad spawn location for "+p.getName()+": Material.WATER");
+		if (!loc.getBlock().getType().isSolid()){
+			plugin.getLogger().info("Got bad spawn location for "+p.getName()+": Non-solid.");
 			return getRandomSpawnLocation(p, loc, true);
 		} else if (loc.getBlock().getType().equals(Material.AIR)){
 			plugin.getLogger().info("Got bad spawn location for "+p.getName()+": Material.AIR");
