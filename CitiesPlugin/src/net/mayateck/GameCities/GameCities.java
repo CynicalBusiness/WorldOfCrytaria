@@ -25,6 +25,8 @@ public class GameCities extends JavaPlugin {
 		saveDefaultConfig();
 		protEventHandler.loadBlockDataFromDisk();
 		
+		this.getConfig().addDefaults(this.getConfig());
+		
 		getLogger().info("Enabled WoC.Organizations.");
 	}
 	
