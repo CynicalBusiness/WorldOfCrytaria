@@ -14,7 +14,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.plugin.Plugin;
 
 public class PhysicsHandler implements Listener{
-public Plugin plugin;
+	public Plugin plugin;
 	
 	public PhysicsHandler(Plugin p){
 		plugin=p;
