@@ -29,6 +29,7 @@ public class Organization {
 	public static Organization getOrganizationByPlayer(FileConfiguration cfg, String player){
 		for (String key : cfg.getConfigurationSection("organizations").getKeys(false)){
 			if (cfg.getStringList("organizations."+key+".players").contains(player)){
+				System.out.println("Tried to match "+player+" to organization "+key+".");
 				return new Organization(cfg, key);
 			}
 		}
