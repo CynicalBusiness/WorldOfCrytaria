@@ -7,4 +7,15 @@ description: GameData_Misc
 author: Wehttam664
 preix: Misc
 
-# No Command/Permisison registrys! #
+commands:
+  announce:
+    aliases: ann
+    default: false
+    usage: /announce [msg]
+    permission: misc.announce
+
+permissions:
+  misc.*:
+    default: false
+  misc.announce:
+    default: false
