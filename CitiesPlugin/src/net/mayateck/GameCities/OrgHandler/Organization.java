@@ -1,6 +1,6 @@
 package net.mayateck.GameCities.OrgHandler;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -56,8 +56,8 @@ public class Organization {
 			desc="";
 			tag="";
 			funds=0.0;
-			relations=Arrays.asList();
-			players=Arrays.asList();
+			relations=new ArrayList<String>();
+			players=new ArrayList<String>();
 			groups=new HashMap<String, ConfigurationSection>();
 			isReal=false;
 		}
@@ -110,9 +110,9 @@ public class Organization {
 	
 	public String toString(boolean inColor){
 		if (inColor){
-			return "&e["+getTag()+"]&r - &7"+getDesc();
+			return "&e["+getTag()+"]&o("+getName()+")&r - &7"+getDesc();
 		} else {
-			return "["+getTag()+"] - "+getDesc();
+			return "["+getTag()+"]("+getName()+") - "+getDesc();
 		}
 	}
 	
@@ -273,11 +273,11 @@ public class Organization {
 	public Relation getRelationsWith(String orgname) {
 		String keyString = "";
 		for (String key : relations){
-			String nameChk = key.substring(0, key.indexOf(":")-1);
+			String nameChk = key.substring(0, key.indexOf("|")-1);
 			if (nameChk==orgname){keyString=key;}
 		}
 		if (keyString!=""){
-			String strr = keyString.substring(keyString.indexOf(":")+1);
+			String strr = keyString.substring(keyString.indexOf("|")+1);
 			if (Relation.valueOf(strr)!=null){return Relation.valueOf(strr);} else {return Relation.NULL;}
 		} else {
 			return Relation.NEUTRAL;
@@ -287,27 +287,31 @@ public class Organization {
 	public void setRelationsWith(String orgName, Relation relation) {
 		String keyString = "";
 		for (String key : relations){
-			String nameChk = key.substring(0, key.indexOf(":")-1);
-			if (nameChk==orgName){keyString=key;}
+			String nameChk = key.substring(0, key.indexOf("|"));
+			if (nameChk.equalsIgnoreCase(orgName)){keyString=key;}
 		}
 		if (keyString==""){
-			String strr = orgName+":"+relation.toString();
+			String strr = orgName+"|"+relation.toString();
 			relations.add(strr);
+			writeDataToDisk(getName());
 		} else {
 			relations.remove(keyString);
+			writeDataToDisk(getName());
 			setRelationsWith(orgName, relation);
 		}
 	}
 	
 	public List<String> getOrganizationsWithRelation(Relation relation){
-		List<String> organizations = Arrays.asList();
+		List<String> organizations = new ArrayList<String>();
 		if (relation==Relation.NEUTRAL){
-			organizations.add("You are automatically neutral with non-related nations.");
+			organizations.add("Neutral is the default relation!");
+			organizations.add("Looking for a list? Try /org list!");
 			organizations.add(".nchk"); // Helps the CommandHandler check for this outcome.
 		} else {
+			pullDataFromDisk(getName());
 			for (String key : relations){
-				if (key.substring(key.indexOf(":")+1).equalsIgnoreCase(relations.toString())){
-					organizations.add(key.substring(0, key.indexOf(":")-1));
+				if (key.substring(key.indexOf("|")+1).equalsIgnoreCase(relation.toString().toUpperCase())){
+					organizations.add(key.substring(0, key.indexOf("|")));
 				}
 			}
 		}
