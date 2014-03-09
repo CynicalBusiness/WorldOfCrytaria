@@ -1,1 +1,5 @@
-players:
+config:
+  whitelist_enabled: false
+  whitelisted_players: []
+  alt_banned_players: []
+  banned_players: []
