@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.Plugin;
 
 public class Organization {
 	String name;
@@ -18,6 +19,7 @@ public class Organization {
 	
 	List<String> relations;
 	List<String> players;
+	List<String> invited;
 	
 	HashMap<String,ConfigurationSection> groups;
 	
@@ -26,24 +28,31 @@ public class Organization {
 	/*
 	 * Static class fetcher for getting city by player.
 	 */
-	public static Organization getOrganizationByPlayer(FileConfiguration cfg, String player){
+	public static Organization getOrganizationByPlayer(FileConfiguration cfg, String player, Plugin plug){
+		Organization org = null;
 		for (String key : cfg.getConfigurationSection("organizations").getKeys(false)){
+			System.out.println("Tried to match "+player+" to organization "+key+".");
 			if (cfg.getStringList("organizations."+key+".players").contains(player)){
-				System.out.println("Tried to match "+player+" to organization "+key+".");
-				return new Organization(cfg, key);
+				System.out.println("Match found! ("+key+")");
+				org = new Organization(cfg, key);
+				plug.saveConfig();
+			} else {
+				org = new Organization(cfg, null);
+				System.out.println("Ignored this lookup, no match.");
 			}
 		}
-		return new Organization(cfg, null);
+		return org;
 	}
 	
 	public Organization(FileConfiguration cfg, String name){
 		if (name!=null){
 			this.name=name;
 			isReal=true;
-			pullDataFromDisk();
+			this.setCfg(cfg);
+			pullDataFromDisk(name);
 		} else {
-			this.name=name;
-			this.cfg=cfg;
+			this.name="nil";
+			this.setCfg(cfg);
 			desc="";
 			tag="";
 			funds=0.0;
@@ -94,6 +103,19 @@ public class Organization {
 		return groups;
 	}
 	
+	@Override
+	public String toString(){
+		return toString(false);
+	}
+	
+	public String toString(boolean inColor){
+		if (inColor){
+			return "&e["+getTag()+"]&r - &7"+getDesc();
+		} else {
+			return "["+getTag()+"] - "+getDesc();
+		}
+	}
+	
 	public boolean groupExists(String gname){
 		if (groups.containsKey("organizations."+name+".groups."+gname)){
 			return true;
@@ -116,8 +138,8 @@ public class Organization {
 	}
 	
 	public String getPlayerGroup(String player){
-		String playerGroup = "";
-		pullDataFromDisk();
+		String playerGroup = "default";
+		pullDataFromDisk(this.name);
 		System.out.println("Found " + groups.size() + " groups.");
 		for (String key : groups.keySet()){
 			System.out.println("Checking group "+key);
@@ -157,7 +179,36 @@ public class Organization {
 		}
 	}
 	
-	public boolean addGroupPermission(String group, String permission){
+	public boolean isMod(String pname){
+		List<String> players = groups.get("moderator").getStringList("players");
+		if (players != null){
+			if (players.contains(pname)){
+				return true;
+			}
+		} 
+		return false;
+	}
+	
+	public boolean isAdmin(String pname){
+		List<String> players = groups.get("admin").getStringList("players");
+		if (players != null){
+			if (players.contains(pname)){
+				return true;
+			}
+		} 
+		return false;
+	}
+	
+	public boolean isOwner(String pname){
+		String owner = cfg.getString("organizations."+getName()+".owner");
+		if (owner.equalsIgnoreCase(pname)){
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	/*public boolean addGroupPermission(String group, String permission){
 		if (groupExists(group)){
 			List<String> perms = groups.get(group).getStringList("permissions");
 			ConfigurationSection groupCfg = groups.get(group);
@@ -185,7 +236,12 @@ public class Organization {
 	
 	public boolean groupHasPermission(String group, String permission){
 		if (groupExists(group)){
-			if (groups.get(group).getStringList("perms").contains(permission)){
+			// DEBUG
+			List<String> gperms = groups.get(group).getStringList("perms");
+			for (String s : gperms){
+				GameCities.logger.info("Checked "+permission+" to "+s);
+			}
+			if (gperms.contains(permission)){
 				return true;
 			} else {
 				return false;
@@ -198,6 +254,7 @@ public class Organization {
 	public boolean groupHasPermission(String group, List<String> permission, boolean isAll){
 		boolean hasOne = false;
 		boolean hasAll = true;
+		permission.add("'*'");
 		for (String val : permission){
 			boolean hasPerm = groupHasPermission(group, val);
 			if (hasPerm==true){
@@ -211,7 +268,7 @@ public class Organization {
 		} else {
 			return hasOne;
 		}
-	}
+	}*/
 
 	public Relation getRelationsWith(String orgname) {
 		String keyString = "";
@@ -261,14 +318,30 @@ public class Organization {
 		return players;
 	}
 	
+	public List<String> getInvited() {
+		return players;
+	}
+	
 	public void delPlayer(String player){
 		players.remove(player);
+		writeDataToDisk(getName());
 	}
 
 	public void addPlayer(String player){
 		players.add(player);
+		writeDataToDisk(getName());
 	}
-
+	
+	public void addInvited(String player){
+		players.add(player);
+		writeDataToDisk(getName());
+	}
+	
+	public void delInvited(String player){
+		players.remove(player);
+		writeDataToDisk(getName());
+	}
+	
 	public void setCfg(FileConfiguration cfg) {
 		this.cfg = cfg;
 	}
@@ -279,29 +352,34 @@ public class Organization {
 		cfg.set("organizations."+name+".funds", funds);
 		cfg.set("organizations."+name+".relations", relations);
 		cfg.set("organizations."+name+".players", players);
+		cfg.set("organizations."+name+".invited", invited);
 		
 		for (String key : groups.keySet()){
 			cfg.set("organizations."+name+".groups."+key, groups.get(key));
 		}
 		
-	} public void writeDataToDisk(){writeDataToDisk(name);}
+	}
 	
 	public void pullDataFromDisk(String name){
-		this.name=name;
 		if (cfg.contains("organizations."+name)){
 			desc = cfg.getString("organizations."+name+".desc");
 			tag = cfg.getString("organizations."+name+".tag");
 			funds = cfg.getDouble("organizations."+name+".funds");
 			relations = cfg.getStringList("organizations."+name+".relations");
 			players = cfg.getStringList("organizations."+name+".players");
+			invited = cfg.getStringList("organizations."+name+".invited");
 			
-			groups.clear();
+			if (groups!=null){
+				groups=null;
+			}
+			groups = new HashMap<String, ConfigurationSection>();
 			for (String key : cfg.getConfigurationSection("organizations."+name+".groups").getKeys(false)){
 				groups.put(key, cfg.getConfigurationSection("organizations."+name+".groups."+key));
 				System.out.println("Put organizations."+name+".groups."+key);
 			}
 		} else {
+			System.out.println("Failed to find "+name+" in config.");
 			isReal=false;
 		}
-	} public void pullDataFromDisk(){pullDataFromDisk(name);}
+	}
 }
