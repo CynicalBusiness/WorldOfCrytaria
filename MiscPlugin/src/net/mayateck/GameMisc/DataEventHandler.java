@@ -30,12 +30,20 @@ public class DataEventHandler implements Listener{
 		String n = p.getName();
 		List<String> altBanned = plugin.getConfig().getStringList("config.alt_banned_players");
 		List<String> banned = plugin.getConfig().getStringList("config.banned_players");
+		List<String> whitelist = plugin.getConfig().getStringList("config.whitelisted_players");
 		if (altBanned.contains(n)){
-			e.setKickMessage("This account has been suspended due to suspended alternate accounts. If this is incorrect, please email matt@capit.me.");
+			e.setKickMessage(ChatColor.translateAlternateColorCodes('&',
+					"&rThis account has been &c&osuspended &rdue to suspended alternate accounts. If this is incorrect, please email &3matt@capit.me&r."));
 			e.setResult(Result.KICK_BANNED);
 		} else if (banned.contains(n)) {
-			e.setKickMessage("This accound has been suspended due to violation of the International Code of Conduct");
+			e.setKickMessage(ChatColor.translateAlternateColorCodes('&',
+					"&rThis accound has been &c&osuspended &rdue to violation of the &oInternational Code of Conduct&r."));
 			e.setResult(Result.KICK_BANNED);
+			
+		} else if (plugin.getConfig().getBoolean("config.whitelist_enabled") && !whitelist.contains(n)) {
+			e.setKickMessage(ChatColor.translateAlternateColorCodes('&',
+					"&r&lWe're sorry! &rThe server is currently under &cmaintenance&r and should return again &3soon&r!"));
+			e.setResult(Result.KICK_WHITELIST);
 			
 		} else {
 			if (delay==0){
@@ -48,7 +56,7 @@ public class DataEventHandler implements Listener{
 					}
 					
 				}.runTaskLater(plugin, 40L);
-				if (plugin.getConfig().getStringList("config.whitelisted_players").contains(n)){
+				if (whitelist.contains(n)){
 					e.setResult(Result.ALLOWED);
 				} else {
 					if (plugin.getServer().getOnlinePlayers().length<plugin.getServer().getMaxPlayers()){
