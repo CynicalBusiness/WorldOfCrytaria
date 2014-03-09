@@ -227,55 +227,95 @@ public class CommandHandler implements CommandExecutor{
 				} else if (args[0].equalsIgnoreCase("relations")){
 					Organization org = Organization.getOrganizationByPlayer(plugin.getConfig(), p.getName(), plugin);
 					if (org.isReal){
-						if (args[1].equalsIgnoreCase("view")){
-							if (args.length==4){
-								if (args[2].equalsIgnoreCase("org") || args[2].equalsIgnoreCase("organization")){
-									Organization reqorg = new Organization(plugin.getConfig(), args[3].toLowerCase());
-									if (reqorg.isReal==true){
-										Relation rel = org.getRelationsWith(args[3].toLowerCase());
-										s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Your organiation is "+rel.toString()+" toward "+args[3]+"."));
-										return CommandOutput.SUCCESS;
-									} else {
-										return CommandOutput.BAD_ORG;
-									}
-								} else if (args[2].equalsIgnoreCase("relation")){
-									Relation rel = Relation.valueOf(args[3].toUpperCase());
-									if (rel!=null || rel!=Relation.NULL){
-										List<String> orgs = org.getOrganizationsWithRelation(rel);
-										if (!orgs.contains(".nchk")){
-											s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Your organization's "+args[3].toUpperCase()+ " relations are:"));
-											for (String str : orgs){
-												Organization strorg = new Organization(plugin.getConfig(), str);
-												String echoString = " &7- &f";
-												if (strorg.isReal==true){
-													if (strorg.getName().equalsIgnoreCase("")){
-														echoString += str;
-													} else {
-														echoString += "&7"+strorg.getName()+" &r&o("+str+")&r";
+						if (args.length>1){
+							if (args[1].equalsIgnoreCase("view")){
+								if (args.length==4){
+									if (args[2].equalsIgnoreCase("org") || args[2].equalsIgnoreCase("organization")){
+										Organization reqorg = new Organization(plugin.getConfig(), args[3].toLowerCase());
+										if (reqorg.isReal==true){
+											Relation rel = org.getRelationsWith(args[3].toLowerCase());
+											s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Your organiation is "+rel.toString()+" toward "+args[3]+"."));
+											return CommandOutput.SUCCESS;
+										} else {
+											return CommandOutput.BAD_ORG;
+										}
+									} else if (args[2].equalsIgnoreCase("relation")){
+										Relation rel = Relation.valueOf(args[3].toUpperCase());
+										if (rel!=null || rel!=Relation.NULL){
+											List<String> orgs = org.getOrganizationsWithRelation(rel);
+											if (!orgs.contains(".nchk")){
+												if (orgs.size()>0){
+													s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Your organization's &f"+args[3].toUpperCase()+ "&7 relations are:"));
+													for (String str : orgs){
+														Organization strorg = new Organization(plugin.getConfig(), str);
+														String echoString = "";
+														if (strorg.isReal==true){
+															if (strorg.getTag().equalsIgnoreCase("")){
+																echoString += " &7- &e"+str+"&r";;
+															} else {
+																echoString += " &7- &e"+strorg.getTag()+" &r&o("+str+")&r";
+															}
+														} else {
+															echoString += " &7- &n"+str+" - &r&o(Disbanded)&r";
+														}
+														s.sendMessage(ChatColor.translateAlternateColorCodes('&', echoString));
 													}
 												} else {
-													echoString += "&n"+str+" &r&o(Disbanded)&r";
+													s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"Your organization has no &f"+args[3].toUpperCase()+ "&7 relations."));
 												}
-												s.sendMessage(ChatColor.translateAlternateColorCodes('&', echoString));
+											} else {
+												s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+orgs.get(0)));
+												s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+orgs.get(1)));
 											}
+											return CommandOutput.SUCCESS;
 										} else {
-											s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+orgs.get(0)));
+											return CommandOutput.BAD_ARG;
 										}
-										return CommandOutput.SUCCESS;
 									} else {
 										return CommandOutput.BAD_ARG;
 									}
 								} else {
-									return CommandOutput.BAD_ARG;
+									return CommandOutput.BAD_ARG_COUNT;
+								}
+							} else if (args[1].equalsIgnoreCase("set")){
+								if (args.length==4){
+									Relation rel = null;
+									try {
+										 rel = Relation.valueOf(args[3].toUpperCase());
+									} catch (IllegalArgumentException e){
+										p.sendMessage(ChatColor.translateAlternateColorCodes('&', "The relation "+args[3].toUpperCase()+" is not valid."));
+									}
+									if (rel!=null){
+										Organization corg = new Organization(plugin.getConfig(), args[2]);
+										if (corg.isReal){
+											if (org.isMod(p.getName()) || org.isAdmin(p.getName())){
+												if (org.getName().equalsIgnoreCase(corg.getName())){
+													org.setRelationsWith(corg.getName(), rel);
+													p.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+
+															"Relation with &e"+corg.getName()+"&7 set to &f"+rel.toString().toUpperCase()+"&7."));
+													org.writeDataToDisk(org.getName());
+													plugin.saveConfig();
+													return CommandOutput.SUCCESS;
+												} else {
+													return CommandOutput.BAD_ORG;
+												}
+											} else {
+												return CommandOutput.NO_ORG_PERMISSION;
+											}
+										} else {
+											return CommandOutput.BAD_ORG;
+										}
+									} else {
+										return CommandOutput.BAD_ARG;
+									}
+								} else {
+									return CommandOutput.BAD_ARG_COUNT;
 								}
 							} else {
-								return CommandOutput.BAD_ARG_COUNT;
+								return CommandOutput.BAD_ARG;
 							}
-						} else if (args[0].equalsIgnoreCase("set")){ // TODO Setup relation setting.
-							
-							return CommandOutput.TODO;
 						} else {
-							return CommandOutput.BAD_ARG;
+							return CommandOutput.BAD_ARG_COUNT;
 						}
 					} else {
 						return CommandOutput.NOT_IN_ORG;
