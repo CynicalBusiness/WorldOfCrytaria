@@ -1,6 +1,5 @@
 package net.mayateck.GameMisc;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.ChatColor;
@@ -11,31 +10,87 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 public class DataEventHandler implements Listener{
-	public Plugin plugin;
+	public GameMisc plugin;
+	public static int delay = 0;
 	
-	public DataEventHandler(Plugin p){
+	public DataEventHandler(GameMisc p){
 		plugin=p;
 	}
-
+	
 	@EventHandler
-	public void onPlayerLogon(PlayerJoinEvent e){
-		plugin.getLogger().info("Player joined. Checking hasJoined data...");
+	public void onPlayerLogin(PlayerLoginEvent e){
 		Player p = e.getPlayer();
-		List<String> plist = plugin.getConfig().getStringList("players");
-		if (!plist.contains(p.getName())){
-			plugin.getLogger().info("Player is new, creating new random location...");
-			//newPlayerStuff(p);
-			teleportToRandom(p);
-			plist.add(p.getName());
-			plugin.getConfig().set("players", plist);
-			plugin.saveConfig();
+		String n = p.getName();
+		List<String> altBanned = plugin.getConfig().getStringList("config.alt_banned_players");
+		List<String> banned = plugin.getConfig().getStringList("config.banned_players");
+		if (altBanned.contains(n)){
+			e.setKickMessage("This account has been suspended due to suspended alternate accounts. If this is incorrect, please email matt@capit.me.");
+			e.setResult(Result.KICK_BANNED);
+		} else if (banned.contains(n)) {
+			e.setKickMessage("This accound has been suspended due to violation of the International Code of Conduct");
+			e.setResult(Result.KICK_BANNED);
+			
+		} else {
+			if (delay==0){
+				delay=1;
+				new BukkitRunnable(){
+
+					@Override
+					public void run() {
+						delay = 0;
+					}
+					
+				}.runTaskLater(plugin, 40L);
+				if (plugin.getConfig().getStringList("config.whitelisted_players").contains(n)){
+					e.setResult(Result.ALLOWED);
+				} else {
+					if (plugin.getServer().getOnlinePlayers().length<plugin.getServer().getMaxPlayers()){
+						e.setResult(Result.ALLOWED);
+					} else {
+						// TODO Setup login que.
+						e.setKickMessage("The server has currently reached capacity. Please wait a while and try again.");
+						e.setResult(Result.KICK_FULL);
+					}
+				}
+			} else {
+				e.setKickMessage("Too many simultanious join attempts. Wait a few seconds and try again.");
+				e.setResult(Result.KICK_OTHER);
+			}
 		}
+	}
+	
+	@EventHandler
+	public void onPlayerLogon(final PlayerJoinEvent e){
+		new BukkitRunnable(){
+
+			@Override
+			public void run() {
+				plugin.getLogger().info("Player joined. Checking hasJoined data...");
+				Player p = e.getPlayer();
+				List<String> plist = plugin.getPList().getStringList("players");
+				if (!plist.contains(p.getName())){
+					plugin.getLogger().info("Player is new, creating new random location...");
+					//newPlayerStuff(p);
+		
+					Location spawn = getRandomSpawnLocation(p, new Location(p.getWorld(),0,255,0), true);
+					plugin.getLogger().info("Created "+spawn+" for location.");
+					p.teleport(spawn);
+					plugin.getLogger().info("Teleported player and applied effect.");
+					p.addPotionEffect(PotionEffectType.REGENERATION.createEffect(4, 6), true);
+					
+					plist.add(p.getName());
+					plugin.getPList().set("players", plist);
+					plugin.savePList();
+				}
+			}
+		}.runTaskLater(plugin, 1L);
 	}
 	
 	@EventHandler
@@ -45,94 +100,46 @@ public class DataEventHandler implements Listener{
 	}
 	
 	@EventHandler
-	public void onPlayerRespawn(PlayerRespawnEvent e){
-		plugin.getLogger().info("Player died. Checking bed data...");
-		Player p = e.getPlayer();
-		if (e.isBedSpawn()==false){
-			plugin.getLogger().info("Player has no bed, creating new random location...");
-			teleportToRandom(p, e);
-		}
-	}
-	
-	public void teleportToRandom(Player p){
-		Location spawn = getRandomSpawnLocation(p, new Location(p.getWorld(),0,64,0), true);
-		plugin.getLogger().info("Created "+spawn+" for location.");
-		p.teleport(spawn);
-	}
-	
-	public void teleportToRandom(Player p, PlayerRespawnEvent e){
-		Location spawn = getRandomSpawnLocation(p, new Location(p.getWorld(),0,64,0), true);
-		plugin.getLogger().info("Created "+spawn+" for location.");
-		e.setRespawnLocation(spawn);
+	public void onPlayerRespawn(final PlayerRespawnEvent e){
+		new BukkitRunnable(){
+
+			@Override
+			public void run() {
+				plugin.getLogger().info("Player died. Checking bed data...");
+				Player p = e.getPlayer();
+				if (e.isBedSpawn()==false){
+					plugin.getLogger().info("Player has no bed, creating new random location...");
+					Location spawn = getRandomSpawnLocation(p, new Location(p.getWorld(),0,255,0), true);
+					plugin.getLogger().info("Created "+spawn+" for location.");
+					p.teleport(spawn);
+					plugin.getLogger().info("Teleported player and applied effect.");
+					p.addPotionEffect(PotionEffectType.REGENERATION.createEffect(4, 6), true);
+				}
+			}
+			
+		}.runTaskLater(plugin, 1L);
+			
 	}
 	
 	public Location getRandomSpawnLocation(Player p, Location loc, boolean doOverride){
 		if (doOverride){
 			plugin.getLogger().info("Override true. New coordinates generated.");
-			double randX = (Math.random()*20000)-10000;
-			double randZ = (Math.random()*20000)-10000;
+			double randX = (Math.random()*12000)-6000;
+			double randZ = (Math.random()*12000)-6000;
 			loc.setX(randX);
 			loc.setZ(randZ);
 		}
-		if (!loc.getBlock().getType().isSolid()){
-			plugin.getLogger().info("Got bad spawn location for "+p.getName()+": Non-solid.");
-			return getRandomSpawnLocation(p, loc, true);
-		} else if (loc.getBlock().getType().equals(Material.AIR)){
-			plugin.getLogger().info("Got bad spawn location for "+p.getName()+": Material.AIR");
+		if (loc.getBlock().getType().isSolid()){
+			plugin.getLogger().info("Got a good spawn location for "+p.getName()+"!");
+			loc.setY(loc.getY()+2);
+			if (loc.getBlock().getType()==Material.WATER || loc.getBlock().getType()==Material.LAVA){
+				return getRandomSpawnLocation(p, loc, true);
+			}
+			return loc;
+		} else {
+			//plugin.getLogger().info("Got bad spawn location for "+p.getName()+": Non-Solid");
 			loc.setY(loc.getY()-1);
 			return getRandomSpawnLocation(p, loc, false);
-		} else {
-			Location above = loc.clone();
-			above.setY(above.getY()+1);
-			if (above.getBlock().getType().equals(Material.AIR)){
-				plugin.getLogger().info("Got a good spawn location for "+p.getName()+"!");
-				return loc;
-			} else {
-				plugin.getLogger().info("Got bad spawn location for "+p.getName()+": Underground");
-				return getRandomSpawnLocation(p, above, false);
-			}
 		}
-	}
-	
-	public void newPlayerStuff(Player p){
-		ItemStack is = new ItemStack(Material.BOOK, 1);
-		BookMeta bm = (BookMeta) is.getItemMeta();
-		
-		bm.setTitle("World of Cyrtrador Guidebook");
-		bm.setAuthor("Wehttam664");
-		
-		List<String> pages = Arrays.asList(
-			"§lWelcome to Cyrtaria!@"
-			+ "§l#-----------------#@"
-			+ "Cyrtaria is unlike@"
-			+ "standard Minecraft or@"
-			+ "Tekkit servers. Mobs@"
-			+ "are all but disabled@"
-			+ "and player spawns are@"
-			+ "completly random with@"
-			+ "No player-to-player@"
-			+ "teleportation. To do@"
-			+ "well, one must work@"
-			+ "together with others@"
-			+ "to create a",
-			"civilization and@"
-			+ "develop a well-oiled@"
-			+ "government. In order@"
-			+ "to gain new tech,@"
-			+ "you must research@"
-			+ "for your civilization@"
-			+ "toward war, science,@"
-			+ "exploration, and@"
-			+ "more!@"
-			+ "Good Luck!",
-			" Authors: Wehttam664,@"
-			+ "willynillyskin,@"
-			+ "and ikenna798.@"
-			+ "@"
-			+ "For more info, visit@"
-			+ "woc.mayateck.net"
-			);
-		bm.setPages(pages);
-		p.getInventory().addItem(is);
 	}
 }
