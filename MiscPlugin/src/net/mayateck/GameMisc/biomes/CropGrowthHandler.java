@@ -276,7 +276,12 @@ public class CropGrowthHandler implements Listener{
 				}
 			}
 		}
-		return isUnder;
+		double nc = Math.random();
+		if (nc>0.5){
+			return isUnder;
+		} else {
+			return false;
+		}
 	}
 	
 	@EventHandler
