@@ -286,7 +286,7 @@ public class CropGrowthHandler implements Listener{
 	
 	@EventHandler
 	public void onBonemeal(PlayerInteractEvent e){
-		if (e.getItem().getType()==Material.INK_SACK && e.getAction()==Action.RIGHT_CLICK_BLOCK){
+		if (e.getItem()!=null && e.getAction()!=null && e.getItem().getType()==Material.INK_SACK && e.getAction()==Action.RIGHT_CLICK_BLOCK){
 			e.setCancelled(true);
 		}
 	}
