@@ -19,7 +19,7 @@ public class CommandHandler implements CommandExecutor{
 	public enum CommandOutput{
 		SUCCESS, NULL, BAD_SENDER, BAD_ARG_COUNT, BAD_ARG,
 		NO_PERMISSION, ALREADY_EXISTS, ALREADY_JOINED, MUST_LEAVE, NO_ORG_PERMISSION,
-		BAD_ORG, NOT_IN_ORG, TODO
+		BAD_ORG, NOT_IN_ORG, NOT_INVITED, TODO
 	}
 	
 	Plugin plugin = null;
@@ -76,6 +76,9 @@ public class CommandHandler implements CommandExecutor{
 			break;
 		case NOT_IN_ORG:
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You're not in an organization!"));
+			break;
+		case NOT_INVITED:
+			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"You've not been invited to this organization!"));
 			break;
 		case TODO:
 			s.sendMessage(ChatColor.translateAlternateColorCodes('&', GameCities.tag+"&9TODO&r."));
@@ -396,7 +399,31 @@ public class CommandHandler implements CommandExecutor{
 						return CommandOutput.BAD_ARG_COUNT;
 					}
 				} else if (args[0].equalsIgnoreCase("join")){
-					return CommandOutput.TODO;
+					if (args.length==2){
+						Organization org = new Organization(plugin.getConfig(), args[1]);
+						if (org.isReal){
+							String inv = p.getName();
+							Organization jorg = Organization.getOrganizationByPlayer(plugin.getConfig(), p.getName(), plugin);
+							if (!jorg.getName().equalsIgnoreCase(org.getName())){
+								if (!jorg.isReal){
+									if (org.getInvited().contains(inv)){
+										jorg.addPlayer(p.getName());
+										jorg.delInvited(p.getName());
+									} else {
+										return CommandOutput.NOT_INVITED;
+									}
+								} else {
+									return CommandOutput.MUST_LEAVE;
+								}
+							} else {
+								return CommandOutput.ALREADY_JOINED;
+							}
+						} else {
+							return CommandOutput.BAD_ORG;
+						}
+					} else {
+						return CommandOutput.BAD_ARG_COUNT;
+					}
 				} else {
 					return CommandOutput.BAD_ARG;
 				}
