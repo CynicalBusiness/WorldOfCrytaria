@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import net.mayateck.GameCities.OrgHandler.DataFetch;
 import net.mayateck.GameCities.OrgHandler.ProtectionHandler;
+import net.mayateck.GameCities.factory.FactoryHandler;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,11 +16,13 @@ public class GameCities extends JavaPlugin {
 	
 	public DataFetch fetcher = null;
 	public ProtectionHandler protEventHandler = null;
+	public FactoryHandler factoryHandler = null;
 	
 	@Override
 	public void onEnable(){
 		fetcher = new DataFetch(this);
 		protEventHandler = new ProtectionHandler(this);
+		factoryHandler = new FactoryHandler(this);
 		CommandHandler cmdh = new CommandHandler(this, protEventHandler);
 		getServer().getPluginManager().registerEvents(protEventHandler, this);
 		getCommand("organization").setExecutor(cmdh);
