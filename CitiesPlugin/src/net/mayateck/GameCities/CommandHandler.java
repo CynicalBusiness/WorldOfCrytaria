@@ -208,6 +208,7 @@ public class CommandHandler implements CommandExecutor{
 										i++;
 									}
 									desc.replaceAll("'", "''");
+									desc.replaceAll("&", "_");
 									org.setDesc(desc);
 									org.writeDataToDisk(org.getName());
 									plugin.saveConfig();
