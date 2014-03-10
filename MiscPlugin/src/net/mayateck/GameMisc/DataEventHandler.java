@@ -5,14 +5,25 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.ThrownExpBottle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.player.PlayerExpChangeEvent;
+import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemBreakEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -22,6 +33,55 @@ public class DataEventHandler implements Listener{
 	
 	public DataEventHandler(GameMisc p){
 		plugin=p;
+	}
+	
+	@EventHandler
+	public void onItemEnchant(EnchantItemEvent e){
+		e.setCancelled(true); // Cancel in all cases. Enchanting is done by factory.
+	}
+	
+	@EventHandler
+	public void onEXPGather(PlayerExpChangeEvent e){
+		e.setAmount(0);
+	}
+	
+	@EventHandler
+	public void onToolBreak(PlayerItemBreakEvent e){
+		// TODO Broken tools.
+	}
+	
+	@EventHandler
+	public void onProjectileThrow(ProjectileLaunchEvent e){
+		if (e.getEntity() instanceof ThrownExpBottle){
+			e.setCancelled(true); // Going to be handled differently.
+		}
+	}
+	
+	@EventHandler
+	public void onFish(PlayerFishEvent e){
+		Entity caught = e.getCaught();
+		if (caught!=null){
+			ItemStack is = ((Item)caught).getItemStack();
+			if (is.getType()!=Material.RAW_FISH){
+				is.setType(Material.RAW_FISH);
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onPlayerInteract(PlayerInteractEvent e){
+		if (e.getAction()==Action.RIGHT_CLICK_BLOCK || e.getAction()==Action.RIGHT_CLICK_AIR){
+			Player p = e.getPlayer();
+			if (p.getItemInHand().getType()==Material.EXP_BOTTLE){
+				ItemStack is = p.getItemInHand();
+				if (is.getAmount()>1){
+					is.setAmount(is.getAmount()-1);
+				} else {
+					p.setItemInHand(new ItemStack(Material.AIR));
+				}
+				p.giveExp(16);
+			}
+		}
 	}
 	
 	@EventHandler
